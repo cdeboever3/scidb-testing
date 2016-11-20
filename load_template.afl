@@ -1,0 +1,50 @@
+create array temp <gene_id:string, variant_id:string, tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[row=0:*,?,0];
+
+insert(
+  redimension(
+    apply(
+      aio_input('/home/scidb_bio/testing/input.tsv', 'num_attributes=6', 'header=1'),
+      gene_id, a0,
+      variant_id, a1,
+      tss_distance, int32(a2),
+      pval_nominal, float(a3),
+      slope, float(a4),
+      slope_se, float(a5)),
+    temp),
+  temp);
+
+store(
+  uniq(
+    sort(
+      redimension(
+        temp, 
+        <gene_id:string>[row]))),
+    temp_row);
+
+store(
+  uniq(
+    sort(
+      redimension(
+        temp, 
+        <variant_id:string>[row]))),
+    temp_col);
+
+store(
+  index_lookup(temp, temp_row, temp.gene_id),
+  temp_r);
+
+store( 
+  index_lookup(temp_r, temp_col, temp_r.variant_id),
+  temp_rc);
+
+store(
+  redimension(temp_rc, <tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[gene_id_index, variant_id_index]),
+  temp_final);
+
+remove(temp);
+remove(temp_r);
+remove(temp_rc);
+
+remove(temp_final);
+remove(temp_col);
+remove(temp_row);

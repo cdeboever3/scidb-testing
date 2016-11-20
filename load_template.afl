@@ -1,50 +1,43 @@
-create array temp <gene_id:string, variant_id:string, tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[row=0:*,?,0];
+create temp array tmp <gene_id: string, variant_id: string, tss_distance: int32, pval_nominal:float, slope:float, slope_se: float>[tuple_no = 0:*,10000000,0, dst_instance_id=0:15,1,0, source_instance_id=0:15,1,0];
 
-insert(
-  redimension(
+store(
+  project(
     apply(
-      aio_input('/home/scidb_bio/testing/input.tsv', 'num_attributes=6', 'header=1'),
+      aio_input('/home/scidb_bio/scidb-testing/input.tsv', 'num_attributes=6', 'header=1'),
       gene_id, a0,
       variant_id, a1,
       tss_distance, int32(a2),
       pval_nominal, float(a3),
       slope, float(a4),
-      slope_se, float(a5)),
-    temp),
-  temp);
+      slope_se, float(a5)
+    ),
+    gene_id, variant_id, tss_distance, pval_nominal, slope, slope_se
+  ),
+  tmp);
 
 store(
   uniq(
     sort(
       redimension(
-        temp, 
+        tmp, 
         <gene_id:string>[row]))),
-    temp_row);
+    tmp_row);
 
 store(
   uniq(
     sort(
       redimension(
-        temp, 
+        tmp, 
         <variant_id:string>[row]))),
-    temp_col);
+    tmp_col);
 
 store(
-  index_lookup(temp, temp_row, temp.gene_id),
-  temp_r);
-
-store( 
-  index_lookup(temp_r, temp_col, temp_r.variant_id),
-  temp_rc);
-
-store(
-  redimension(temp_rc, <tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[gene_id_index, variant_id_index]),
-  temp_final);
-
-remove(temp);
-remove(temp_r);
-remove(temp_rc);
-
-remove(temp_final);
-remove(temp_col);
-remove(temp_row);
+  redimension( 
+    index_lookup( 
+      index_lookup(tmp, tmp_row, tmp.gene_id, gene_id_index), 
+      tmp_col, tmp.variant_id, variant_id_index
+    ),
+    <tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[gene_id_index, variant_id_index]
+ ),
+ tmp_final
+)

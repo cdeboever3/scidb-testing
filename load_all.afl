@@ -3,7 +3,7 @@ create temp array tmp <gene_id: string, variant_id: string, tss_distance: int32,
 store(
   project(
     apply(
-      aio_input('/home/scidb_bio/scidb-testing/input.tsv', 'num_attributes=6', 'header=1'),
+      aio_input('/home/scidb_bio/scidb-testing/Heart_Atrial_Appendage_Analysis.v6p.all_snpgene_pairs.txt', 'num_attributes=6', 'header=1'),
       gene_id, a0,
       variant_id, a1,
       tss_distance, int32(a2),
@@ -20,29 +20,26 @@ store(
     sort(
       redimension(
         tmp, 
-        <gene_id:string>[row = 0:*,10000000,0]))),
-    tmp_row);
+        <gene_id:string>[row = 0:*,200000000,0]))),
+    rows);
 
 store(
   uniq(
     sort(
       redimension(
         tmp, 
-        <variant_id:string>[row = 0:*,10000000,0]))),
-    tmp_col);
+        <variant_id:string>[row = 0:*,200000000,0]))),
+    cols);
 
 store(
   redimension( 
     index_lookup( 
-      index_lookup(tmp, tmp_row, tmp.gene_id, gene_id_index), 
-      tmp_col, tmp.variant_id, variant_id_index
+      index_lookup(tmp, rows, tmp.gene_id, gene_id_index), 
+      cols, tmp.variant_id, variant_id_index
     ),
-    <tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[gene_id_index = 0:*,10000000,0, variant_id_index = 0:*,10000000,0]
+    <tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[gene_id_index = 0:*,100000000,0, variant_id_index = 0:*,100000000,0]
  ),
  final
 );
 
 remove(tmp);
-remove(tmp_col);
-remove(tmp_row);
-remove(final);

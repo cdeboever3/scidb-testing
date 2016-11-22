@@ -18,17 +18,19 @@ store(
 store(
   uniq(
     sort(
-      redimension(
+      project(
         tmp, 
-        <gene_id:string>[row = 0:*,200000000,0]))),
+        gene_id
+      ))),
     rows);
 
 store(
   uniq(
     sort(
-      redimension(
-        tmp, 
-        <variant_id:string>[row = 0:*,200000000,0]))),
+     project(
+        tmp,
+        variant_id
+     ))),
     cols);
 
 store(
@@ -37,7 +39,8 @@ store(
       index_lookup(tmp, rows, tmp.gene_id, gene_id_index), 
       cols, tmp.variant_id, variant_id_index
     ),
-    <tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[gene_id_index = 0:*,100000000,0, variant_id_index = 0:*,100000000,0]
+    <tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[gene_id_index = 0:*,2000,0, variant_id_index = 0:*,500000,0],
+    false --ignore duplicate cells (pick any values)
  ),
  final
 );

@@ -1,0 +1,69 @@
+create temp array tmp <gene_id: string, variant_id: string, tss_distance: int32, pval_nominal:float, slope:float, slope_se: float, chrom: int32, coord: int32, ref: string, alt: string>[tuple_no = 0:*,10000000,0, dst_instance_id=0:15,1,0, source_instance_id=0:15,1,0];
+
+store(
+  project(
+    apply(
+      apply(
+        apply(
+          apply(
+            apply(
+              aio_input('/home/scidb_bio/scidb-testing/10.tsv', 'num_attributes=6', 'header=1'),
+              gene_id, a0,
+              variant_id, a1,
+              tss_distance, int32(a2),
+              pval_nominal, float(a3),
+              slope, float(a4),
+              slope_se, float(a5)
+            ),
+            chrom, int32(nth_tdv(variant_id, 0, '_'))
+          ),
+          coord, int32(nth_tdv(variant_id, 1, '_'))
+        ),
+        ref, nth_tdv(variant_id, 2, '_')
+      ),
+    alt, nth_tdv(variant_id, 3, '_')
+    ),
+    gene_id, variant_id, tss_distance, pval_nominal, slope, slope_se, chrom, coord, ref, alt
+  ),
+  tmp);
+
+store(
+  uniq(
+    sort(
+      project(
+        tmp, 
+        gene_id
+      ))),
+    gene);
+
+store(
+  uniq(
+    sort(
+      project(
+        tmp, 
+        chrom
+      ))),
+    chrom);
+
+store(
+  uniq(
+    sort(
+      project(
+        tmp, 
+        coord
+      ))),
+    coord);
+
+# store(
+#   redimension( 
+#     index_lookup( 
+#       index_lookup(tmp, rows, tmp.gene_id, gene_id_index), 
+#       cols, tmp.variant_id, variant_id_index
+#     ),
+#     <tss_distance:int32, pval_nominal:float, slope:float, slope_se:float>[gene_id_index = 0:*,2000,0, variant_id_index = 0:*,500000,0],
+#     false --ignore duplicate cells (pick any values)
+#  ),
+#  final
+# );
+# 
+# remove(tmp);

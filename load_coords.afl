@@ -1,4 +1,4 @@
-create temp array tmp <gene_id: string, variant_id: string, tss_distance: int32, pval_nominal:float, slope:float, slope_se: float, chrom: int32, coord: int32, ref: string, alt: string>[tuple_no = 0:*,10000000,0, dst_instance_id=0:15,1,0, source_instance_id=0:15,1,0];
+create temp array tmp <gene_id: string, variant_id: string, tss_distance: int32, pval_nominal:float, slope:float, slope_se: float, chrom: string, coord: int32, ref: string, alt: string>[tuple_no = 0:*,10000000,0, dst_instance_id=0:15,1,0, source_instance_id=0:15,1,0];
 
 store(
   project(
@@ -7,7 +7,7 @@ store(
         apply(
           apply(
             apply(
-              aio_input('/home/scidb_bio/scidb-testing/10.tsv', 'num_attributes=6', 'header=1'),
+              aio_input('/home/scidb_bio/scidb-testing/Heart_Atrial_Appendage_Analysis.v6p.all_snpgene_pairs.txt', 'num_attributes=6', 'header=1'),
               gene_id, a0,
               variant_id, a1,
               tss_distance, int32(a2),
@@ -15,7 +15,7 @@ store(
               slope, float(a4),
               slope_se, float(a5)
             ),
-            chrom, int32(nth_tdv(variant_id, 0, '_'))
+            chrom, string(nth_tdv(variant_id, 0, '_'))
           ),
           coord, int32(nth_tdv(variant_id, 1, '_'))
         ),

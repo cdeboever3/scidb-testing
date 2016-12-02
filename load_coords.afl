@@ -36,30 +36,23 @@ store(
       ))),
     gene);
 
-store(
-  uniq(
-    sort(
-      project(
-        tmp, 
-        chrom
-      ))),
-    chrom);
+store(sort(project(grouped_aggregate(tmp, count(*), chrom), chrom)), chrom);
 
-store(
-  uniq(
-    sort(
-      project(
-        tmp, 
-        coord
-      ))),
-    coord);
+-- store(
+--   uniq(
+--     sort(
+--       project(
+--         tmp, 
+--         coord
+--       ))),
+--     coord);
 
 store(
   redimension( 
     index_lookup(
-      index_lookup( 
+      apply( 
         index_lookup(tmp, gene, tmp.gene_id, gene_index), 
-        coord, tmp.coord, coord_index
+        coordinate_int, int64(tmp.coord)
       ),
       chrom, tmp.chrom, chrom_index
     ),
